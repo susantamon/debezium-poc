@@ -1,0 +1,27 @@
+{
+  "name": "inventory-connector",
+  "config": {
+    "connector.class" : "io.debezium.connector.oracle.OracleConnector",
+    "tasks.max" : "1",
+    "database.server.name" : "server1",
+    "database.hostname" : "oracledb19",
+    "database.port" : "1521",
+    "database.user" : "c##dbzuser",
+    "database.password" : "dbz",
+    "database.dbname" : "ORCLCDB",
+    "database.pdb.name" : "ORCLPDB1",
+    "database.connection.adapter" : "logminer",
+    "database.history.kafka.bootstrap.servers" : "kafka:9092",
+    "database.history.kafka.topic": "schema-changes.inventory",
+
+    "transforms": "filter,route",
+    "transforms.filter.type": "io.debezium.transforms.Filter",
+    "transforms.filter.language": "jsr223.groovy",
+    "transforms.filter.condition": "value.source.table == 'CUSTOMERS' && ((value.before != null && value.before.ID >= 1000 && value.before.ID <= 2000) || (value.after != null && value.after.ID >= 1000 && value.after.ID <= 2000))",
+    "transforms.filter.topic.regex": "server1.DEBEZIUM.*",
+
+    "transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
+    "transforms.route.regex": "([^.]+)\\.([^.]+)\\.([^.]+)",
+    "transforms.route.replacement": "$3"
+  }
+}

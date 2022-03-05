@@ -1,0 +1,86 @@
+version: '2'
+services:
+  oracledb19:
+    image: container-registry.oracle.com/database/enterprise:19.3.0.0
+    ports:
+     - 1521:1521
+    environment:
+     - ORACLE_PWD=top_secret
+    volumes:
+     - /Users/3963803/IdeaProjects/blog/debezium/oradata:/opt/oracle/oradata
+  postgres:
+    image: debezium/postgres:9.6
+    ports:
+     - 5432:5432
+    environment:
+     - POSTGRES_USER=postgresuser
+     - POSTGRES_PASSWORD=postgrespw
+     - POSTGRES_DB=inventory
+  zookeeper:
+    image: debezium/zookeeper:${DEBEZIUM_VERSION}
+    ports:
+     - 2181:2181
+     - 2888:2888
+     - 3888:3888
+  kafka:
+    image: debezium/kafka:${DEBEZIUM_VERSION}
+    ports:
+     - 9092:9092
+    links:
+     - zookeeper
+    environment:
+     - ZOOKEEPER_CONNECT=zookeeper:2181
+    depends_on:
+     - zookeeper
+  prometheus:
+    build:
+      context: debezium-prometheus
+      args:
+        PROMETHEUS_VERSION: v2.26.0
+    ports:
+     - 9090:9090
+    links:
+     - connect
+    depends_on:
+     - connect
+  grafana:
+    build:
+      context: debezium-grafana
+      args:
+        GRAFANA_VERSION: 7.5.5
+    ports:
+     - 3000:3000
+    links:
+     - prometheus
+    depends_on:
+     - prometheus
+    environment:
+     - DS_PROMETHEUS=prometheus
+  connect:
+    image: debezium/connect-with-oracle-jdbc:${DEBEZIUM_VERSION}
+    build:
+      context: debezium-with-oracle-jdbc
+      args:
+        DEBEZIUM_VERSION: ${DEBEZIUM_VERSION}
+        JMX_AGENT_VERSION: 0.15.0
+    ports:
+     - 8083:8083
+     - 5005:5005
+     - 1976:1976
+    links:
+     - kafka
+    depends_on:
+     - kafka
+    environment:
+     - BOOTSTRAP_SERVERS=kafka:9092
+     - GROUP_ID=1
+     - CONFIG_STORAGE_TOPIC=my_connect_configs
+     - OFFSET_STORAGE_TOPIC=my_connect_offsets
+     - STATUS_STORAGE_TOPIC=my_connect_statuses
+     - LD_LIBRARY_PATH=/instant_client
+     - KAFKA_DEBUG=true
+     - DEBUG_SUSPEND_FLAG=n
+     - JAVA_DEBUG_PORT=0.0.0.0:5005
+     - KAFKA_OPTS=-javaagent:/kafka/etc/jmx_prometheus_javaagent.jar=8080:/kafka/etc/config.yml
+     - JMXPORT=1976
+     - JMXHOST=localhost
