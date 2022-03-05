@@ -1,8 +1,5 @@
 # Debezium POC with Oracle 19 & Monitoring with Grafana
 
-## Confluence Documentation
-    https://tools.lowes.com/confluence/display/LWC/Data+Replication+%28CDC%29+on+Oracle+DB+using+Debezium
-
 ## Steps to perform
 
 ### Get Oracle Image
