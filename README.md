@@ -23,7 +23,6 @@
     mkdir /opt/oracle/oradata/recovery_area
     curl https://raw.githubusercontent.com/debezium/oracle-vagrant-box/main/setup-logminer.sh | sh
     cat inventory.sql | sqlplus debezium/dbz@//localhost:1521/ORCLPDB1
-    echo "alter table DEBEZIUM.PRODUCTS drop column WEIGHT;" | sqlplus debezium/dbz@//localhost:1521/ORCLPDB1
 
 ### Register the Connectors
     curl -i -X POST -H "Accept:application/json" -H  "Content-Type:application/json" http://localhost:8083/connectors/ -d @register-oracle-logminer.json
